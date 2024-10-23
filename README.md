@@ -1,0 +1,1 @@
+# Konfig-1-shell_emulator-
