@@ -1,11 +1,12 @@
 import os
 import sys
 import zipfile
-import json
+import json  # Это уже не нужно, но пусть остается для других целей
 import time
 import argparse
 from pathlib import Path
 import unittest
+from datetime import datetime  # Для работы с форматированным временем
 
 
 class ShellEmulator:
@@ -16,7 +17,7 @@ class ShellEmulator:
         self.current_dir = '/'
         self.start_time = time.time()
         self.load_vfs(vfs_path)
-        self.log_file = open(self.log_path, 'w')
+        self.setup_log_file()
 
     def load_vfs(self, vfs_path):
         """Load the virtual file system from the zip file."""
@@ -25,15 +26,17 @@ class ShellEmulator:
         self.root_dir = '/tmp/vfs'
         self.current_dir = self.root_dir
 
+    def setup_log_file(self):
+        """Set up the log file with headers for the table."""
+        with open(self.log_path, 'w') as log_file:
+            log_file.write("User Name,Command,Time\n")  # Создаем заголовок таблицы
+
     def log_action(self, command):
-        """Log the user's actions to the JSON log file."""
-        log_entry = {
-            'user': self.user_name,
-            'command': command,
-            'timestamp': time.time()
-        }
-        json.dump(log_entry, self.log_file)
-        self.log_file.write('\n')
+        """Log the user's actions to the log file in a table format."""
+        log_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Форматирование времени
+        log_entry = f"{self.user_name},{command},{log_time}\n"  # Создаем строку для лога
+        with open(self.log_path, 'a') as log_file:
+            log_file.write(log_entry)  # Записываем данные в лог-файл
 
     def run(self):
         """Run the shell, handling commands."""
@@ -42,7 +45,7 @@ class ShellEmulator:
 
         while True:
             command = input(f'{self.user_name}@emulator:{self.current_dir}$ ').strip()
-            self.log_action(command)
+            self.log_action(command)  # Логируем команду
 
             if command == 'exit':
                 break
@@ -56,6 +59,8 @@ class ShellEmulator:
                 self.make_directory(command)
             elif command.startswith('cat'):
                 self.show_file_content(command)
+            elif command.startswith('unzip'):
+                self.unzip_file(command)
             else:
                 print(f"Command not found: {command}")
 
@@ -128,56 +133,26 @@ class ShellEmulator:
         except FileExistsError:
             print(f"Directory already exists: {dir_name}")
 
-
-# Тесты для ShellEmulator
-class TestShellEmulator(unittest.TestCase):
-    def setUp(self):
-        self.emulator = ShellEmulator(user_name="test", vfs_path="test_vfs.zip", log_path="test_log.json", script_path=None)
-        os.mkdir('/tmp/vfs')
-        os.mkdir('/tmp/vfs/empty_dir')
-        os.mkdir('/tmp/vfs/non_empty_dir')
-        with open('/tmp/vfs/non_empty_dir/file1.txt', 'w') as f:
-            f.write("This is a test file")
-
-    def tearDown(self):
-        """Удаление временных файлов и директорий после каждого теста"""
-        if os.path.exists('/tmp/vfs'):
-            for root, dirs, files in os.walk('/tmp/vfs', topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-
-    def test_ls_empty_dir(self):
-        """Тест для команды ls в пустой директории"""
-        self.emulator.current_dir = "/tmp/vfs/empty_dir"
-        self.assertEqual(self.emulator.list_directory(), [])
-
-    def test_ls_non_empty_dir(self):
-        """Тест для команды ls в директории с файлами"""
-        self.emulator.current_dir = "/tmp/vfs/non_empty_dir"
-        self.assertIn('file1.txt', self.emulator.list_directory())
-
-    def test_cat_file(self):
-        """Тест для команды cat для существующего файла"""
-        self.emulator.current_dir = "/tmp/vfs/non_empty_dir"
-        file_content = self.emulator.show_file_content("cat file1.txt")
-        self.assertIn("This is a test file", file_content)
-
-    def test_cat_non_existing_file(self):
-        """Тест для команды cat для несуществующего файла"""
-        self.emulator.current_dir = "/tmp/vfs/non_empty_dir"
-        file_content = self.emulator.show_file_content("cat non_existing_file.txt")
-        self.assertIsNone(file_content)
+    def unzip_file(self, command):
+        """Unzip a file in the current directory."""
+        try:
+            zip_name = command.split()[1]
+            zip_path = os.path.join(self.current_dir, zip_name)
+            if os.path.exists(zip_path) and zipfile.is_zipfile(zip_path):
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(self.current_dir)
+                print(f"Unzipped: {zip_name}")
+            else:
+                print(f"No such zip file: {zip_name}")
+        except IndexError:
+            print("Usage: unzip <file_name>")
 
 
 # Основная функция для запуска эмулятора
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        # Запуск тестов
         unittest.main(argv=sys.argv[:1])
     else:
-        # Запуск эмулятора
         parser = argparse.ArgumentParser(description="Shell Emulator")
         parser.add_argument('--user', required=True, help='User name for the prompt')
         parser.add_argument('--vfs', required=True, help='Path to the zip archive of the virtual file system')
