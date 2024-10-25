@@ -1,12 +1,10 @@
 import os
 import sys
 import zipfile
-import json  # Это уже не нужно, но пусть остается для других целей
 import time
 import argparse
 from pathlib import Path
-import unittest
-from datetime import datetime  # Для работы с форматированным временем
+from datetime import datetime
 
 
 class ShellEmulator:
@@ -86,11 +84,19 @@ class ShellEmulator:
         """Change the current directory."""
         try:
             target_dir = command.split()[1]
-            new_dir = os.path.join(self.current_dir, target_dir)
-            if os.path.exists(new_dir) and os.path.isdir(new_dir):
-                self.current_dir = new_dir
+
+            # Проверяем, если команда 'cd ..', то поднимаемся на уровень выше
+            if target_dir == '..':
+                if self.current_dir != self.root_dir:  # Если не в корневой директории
+                    self.current_dir = os.path.dirname(self.current_dir)
+                else:
+                    print("You are already in the root directory.")
             else:
-                print(f"No such directory: {target_dir}")
+                new_dir = os.path.join(self.current_dir, target_dir)
+                if os.path.exists(new_dir) and os.path.isdir(new_dir):
+                    self.current_dir = new_dir
+                else:
+                    print(f"No such directory: {target_dir}")
         except IndexError:
             print("Usage: cd <directory>")
 
@@ -133,33 +139,16 @@ class ShellEmulator:
         except FileExistsError:
             print(f"Directory already exists: {dir_name}")
 
-    def unzip_file(self, command):
-        """Unzip a file in the current directory."""
-        try:
-            zip_name = command.split()[1]
-            zip_path = os.path.join(self.current_dir, zip_name)
-            if os.path.exists(zip_path) and zipfile.is_zipfile(zip_path):
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(self.current_dir)
-                print(f"Unzipped: {zip_name}")
-            else:
-                print(f"No such zip file: {zip_name}")
-        except IndexError:
-            print("Usage: unzip <file_name>")
-
 
 # Основная функция для запуска эмулятора
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        unittest.main(argv=sys.argv[:1])
-    else:
-        parser = argparse.ArgumentParser(description="Shell Emulator")
-        parser.add_argument('--user', required=True, help='User name for the prompt')
-        parser.add_argument('--vfs', required=True, help='Path to the zip archive of the virtual file system')
-        parser.add_argument('--log', required=True, help='Path to the log file')
-        parser.add_argument('--script', help='Path to the startup script')
+    parser = argparse.ArgumentParser(description="Shell Emulator")
+    parser.add_argument('--user', required=True, help='User name for the prompt')
+    parser.add_argument('--vfs', required=True, help='Path to the zip archive of the virtual file system')
+    parser.add_argument('--log', required=True, help='Path to the log file')
+    parser.add_argument('--script', help='Path to the startup script')
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        emulator = ShellEmulator(user_name=args.user, vfs_path=args.vfs, log_path=args.log, script_path=args.script)
-        emulator.run()
+    emulator = ShellEmulator(user_name=args.user, vfs_path=args.vfs, log_path=args.log, script_path=args.script)
+    emulator.run()
