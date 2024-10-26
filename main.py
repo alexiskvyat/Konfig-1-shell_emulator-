@@ -101,11 +101,14 @@ class ShellEmulator:
             print("Usage: cd <directory>")
 
     def list_directory(self):
-        """List the contents of the current directory."""
+        """List the contents of the current directory without showing current and parent directories."""
         try:
-            files = os.listdir(self.current_dir)
-            for file in files:
-                print(file)
+            files = [f for f in os.listdir(self.current_dir) if f not in ['.', '..']]
+            if files:
+                for file in files:
+                    print(file)
+            else:
+                print("Directory is empty.")
         except FileNotFoundError:
             print("Directory not found.")
 
