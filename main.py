@@ -1,11 +1,8 @@
 import os
-import sys
 import zipfile
 import time
 import argparse
-from pathlib import Path
 from datetime import datetime
-
 
 class ShellEmulator:
     def __init__(self, user_name, vfs_path, log_path, script_path=None):
@@ -27,14 +24,14 @@ class ShellEmulator:
     def setup_log_file(self):
         """Set up the log file with headers for the table."""
         with open(self.log_path, 'w') as log_file:
-            log_file.write("User Name,Command,Time\n")  # Создаем заголовок таблицы
+            log_file.write("User Name,Command,Time\n")
 
     def log_action(self, command):
         """Log the user's actions to the log file in a table format."""
-        log_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Форматирование времени
-        log_entry = f"{self.user_name},{command},{log_time}\n"  # Создаем строку для лога
+        log_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"{self.user_name},{command},{log_time}\n"
         with open(self.log_path, 'a') as log_file:
-            log_file.write(log_entry)  # Записываем данные в лог-файл
+            log_file.write(log_entry)
 
     def run(self):
         """Run the shell, handling commands."""
@@ -43,7 +40,7 @@ class ShellEmulator:
 
         while True:
             command = input(f'{self.user_name}@emulator:{self.current_dir}$ ').strip()
-            self.log_action(command)  # Логируем команду
+            self.log_action(command)
 
             if command == 'exit':
                 break
@@ -57,8 +54,6 @@ class ShellEmulator:
                 self.make_directory(command)
             elif command.startswith('cat'):
                 self.show_file_content(command)
-            elif command.startswith('unzip'):
-                self.unzip_file(command)
             else:
                 print(f"Command not found: {command}")
 
@@ -85,9 +80,8 @@ class ShellEmulator:
         try:
             target_dir = command.split()[1]
 
-            # Проверяем, если команда 'cd ..', то поднимаемся на уровень выше
             if target_dir == '..':
-                if self.current_dir != self.root_dir:  # Если не в корневой директории
+                if self.current_dir != self.root_dir:
                     self.current_dir = os.path.dirname(self.current_dir)
                 else:
                     print("You are already in the root directory.")
@@ -101,14 +95,14 @@ class ShellEmulator:
             print("Usage: cd <directory>")
 
     def list_directory(self):
-        """List the contents of the current directory without showing current and parent directories."""
+        """List the contents of the current directory."""
         try:
-            files = [f for f in os.listdir(self.current_dir) if f not in ['.', '..']]
-            if files:
-                for file in files:
-                    print(file)
-            else:
-                print("Directory is empty.")
+            current_dir_name = os.path.basename(self.current_dir)  # Получаем имя текущей директории
+            files = os.listdir(self.current_dir)
+            # Исключаем файлы и папки, совпадающие по имени с текущей директорией
+            filtered_files = [f for f in files if f != current_dir_name]
+            for file in filtered_files:
+                print(file)
         except FileNotFoundError:
             print("Directory not found.")
 
@@ -141,7 +135,6 @@ class ShellEmulator:
             print("Usage: mkdir <directory_name>")
         except FileExistsError:
             print(f"Directory already exists: {dir_name}")
-
 
 # Основная функция для запуска эмулятора
 if __name__ == "__main__":
