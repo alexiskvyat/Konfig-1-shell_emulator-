@@ -115,11 +115,30 @@ exit
 - ```--log log.json```-путь к лог-файлу
 - ```--script right.txt```-ключ --script указывает путь к стартовому скрипту 
 
+### Команда: ```python3 main.py --user myusername --vfs test.zip --log log.json --script right.txt```
 
+![IMAGE 2024-11-01 15:09:46](https://github.com/user-attachments/assets/bede030c-a309-4a05-9906-d9f9f45e17af)
 
+### Команды: ```cd tests``` — переходит в поддиректорию tests и ```ls``` 
 
+![IMAGE 2024-11-01 15:15:05](https://github.com/user-attachments/assets/8a6e56cd-6648-423f-a55d-c2e2d60eed10)
 
+### Команда: ```uptime``` - время работы терминала
 
+![IMAGE 2024-11-01 15:18:26](https://github.com/user-attachments/assets/8d52297f-db79-4e3c-8507-0546ff909478)
+
+### Команда: ```mkdir``` - создание новой директории
+
+![IMAGE 2024-11-01 15:20:45](https://github.com/user-attachments/assets/b96405fc-436a-462f-9382-f13bb546735c)
+
+### Код тестов:
+
+![IMAGE 2024-11-01 15:22:05](https://github.com/user-attachments/assets/aa0de3f5-2d58-43d6-87b6-65447dc05669)
+
+### Результаты тестирования: 
+Ввод: ```python3 -m unittest test_emulator.py```
+
+После выполнения тестов, были получены следующие результаты:
 
 
 
