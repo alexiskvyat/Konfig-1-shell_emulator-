@@ -79,7 +79,6 @@ class ShellEmulator:
         """Change the current directory."""
         try:
             target_dir = command.split()[1]
-
             if target_dir == '..':
                 if self.current_dir != self.root_dir:
                     self.current_dir = os.path.dirname(self.current_dir)
@@ -97,14 +96,13 @@ class ShellEmulator:
     def list_directory(self):
         """List the contents of the current directory."""
         try:
-            current_dir_name = os.path.basename(self.current_dir)  # Получаем имя текущей директории
             files = os.listdir(self.current_dir)
-            # Исключаем файлы и папки, совпадающие по имени с текущей директорией
-            filtered_files = [f for f in files if f != current_dir_name]
-            for file in filtered_files:
-                print(file)
+            output = '\n'.join(files)
+            print(output)
+            return output  # Теперь метод возвращает результат
         except FileNotFoundError:
             print("Directory not found.")
+            return "Directory not found."
 
     def show_file_content(self, command):
         """Display the content of a file."""
@@ -113,16 +111,23 @@ class ShellEmulator:
             file_path = os.path.join(self.current_dir, file_name)
             if os.path.exists(file_path) and os.path.isfile(file_path):
                 with open(file_path, 'r') as file:
-                    print(file.read())
+                    content = file.read()
+                    print(content)
+                    return content  # Теперь метод возвращает результат
             else:
-                print(f"No such file: {file_name}")
+                error_message = f"No such file: {file_name}"
+                print(error_message)
+                return error_message
         except IndexError:
             print("Usage: cat <file_name>")
+            return "Usage: cat <file_name>"
 
     def show_uptime(self):
         """Show how long the emulator has been running."""
         uptime = time.time() - self.start_time
-        print(f"Uptime: {uptime:.2f} seconds")
+        uptime_output = f"Uptime: {uptime:.2f} seconds"
+        print(uptime_output)
+        return uptime  # Теперь метод возвращает uptime в секундах
 
     def make_directory(self, command):
         """Create a new directory."""
@@ -130,11 +135,16 @@ class ShellEmulator:
             dir_name = command.split()[1]
             new_dir = os.path.join(self.current_dir, dir_name)
             os.mkdir(new_dir)
-            print(f"Directory created: {dir_name}")
+            message = f"Directory created: {dir_name}"
+            print(message)
+            return message
         except IndexError:
             print("Usage: mkdir <directory_name>")
+            return "Usage: mkdir <directory_name>"
         except FileExistsError:
-            print(f"Directory already exists: {dir_name}")
+            error_message = f"Directory already exists: {dir_name}"
+            print(error_message)
+            return error_message
 
 # Основная функция для запуска эмулятора
 if __name__ == "__main__":
